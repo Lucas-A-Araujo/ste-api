@@ -27,21 +27,9 @@ export class PersonController {
     return this.service.findAll();
   }
 
-  @Get()
-  @Version('2')
-  findAllV2() {
-    return this.service.findAll();
-  }
-
   @Get(':id')
   @Version('1')
   findOne(@Param('id') id: string) {
-    return this.service.findOne(+id);
-  }
-
-  @Get(':id')
-  @Version('2')
-  findOneV2(@Param('id') id: string) {
     return this.service.findOne(+id);
   }
 
@@ -60,12 +48,6 @@ export class PersonController {
   @Delete(':id')
   @Version('1')
   remove(@Param('id') id: string) {
-    return this.service.remove(+id);
-  }
-
-  @Delete(':id')
-  @Version('2')
-  removeV2(@Param('id') id: string) {
     return this.service.remove(+id);
   }
 }
