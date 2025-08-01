@@ -26,6 +26,9 @@ export class Person {
   @Column({ unique: true })
   cpf: string;
 
+  @Column({ nullable: true })
+  address?: string;
+
   @CreateDateColumn()
   createdAt: Date;
 
