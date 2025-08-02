@@ -60,55 +60,112 @@ export class PersonService {
   }
 
   async findOne(id: string): Promise<Person> {
-    const person = await this.personRepo.findOneBy({ id });
-    if (!person) {
-      throw new NotFoundException({
-        statusCode: 404,
-        error: ERROR_CODES.PERSON_NOT_FOUND,
-        message: 'Pessoa não encontrada.',
-        timestamp: new Date().toISOString(),
-        path: `/v1/people/${id}`,
-      });
+    try {
+      const person = await this.personRepo.findOneBy({ id });
+      if (!person) {
+        throw new NotFoundException({
+          statusCode: 404,
+          error: ERROR_CODES.PERSON_NOT_FOUND,
+          message: 'Pessoa não encontrada.',
+          timestamp: new Date().toISOString(),
+          path: `/v1/people/${id}`,
+        });
+      }
+      return person;
+    } catch (error) {
+      if (error.code === '22P02' || error.message?.includes('invalid input syntax')) {
+        throw new NotFoundException({
+          statusCode: 404,
+          error: 'PERSON_NOT_FOUND',
+          message: 'Pessoa não encontrada.',
+          timestamp: new Date().toISOString(),
+          path: `/v1/people/${id}`,
+        });
+      }
+      
+      if (error.code) {
+        console.error('Database error:', error);
+        throw error;
+      }
+      
+      throw error;
     }
-    return person;
   }
 
   async update(id: string, dto: UpdatePersonDto): Promise<Person> {
-    const person = await this.findOne(id);
+    try {
+      const person = await this.findOne(id);
 
-    if (dto.cpf && dto.cpf !== person.cpf) {
-      const cpfExists = await this.personRepo.findOneBy({ cpf: dto.cpf });
-      if (cpfExists) {
-        throw new ConflictException({
-          statusCode: 409,
-          error: ERROR_CODES.PERSON_ALREADY_EXISTS,
-          message: 'Pessoa já existe com este CPF.',
+      if (dto.cpf && dto.cpf !== person.cpf) {
+        const cpfExists = await this.personRepo.findOneBy({ cpf: dto.cpf });
+        if (cpfExists) {
+          throw new ConflictException({
+            statusCode: 409,
+            error: ERROR_CODES.PERSON_ALREADY_EXISTS,
+            message: 'Pessoa já existe com este CPF.',
+            timestamp: new Date().toISOString(),
+            path: `/v1/people/${id}`,
+          });
+        }
+      }
+
+      if (dto.email && dto.email !== person.email) {
+        const emailExists = await this.personRepo.findOneBy({ email: dto.email });
+        if (emailExists) {
+          throw new ConflictException({
+            statusCode: 409,
+            error: ERROR_CODES.EMAIL_ALREADY_EXISTS,
+            message: 'Pessoa já existe com este email.',
+            timestamp: new Date().toISOString(),
+            path: `/v1/people/${id}`,
+          });
+        }
+      }
+
+      Object.assign(person, dto);
+      return this.personRepo.save(person);
+    } catch (error) {
+      if (error.code === '22P02' || error.message?.includes('invalid input syntax')) {
+        throw new NotFoundException({
+          statusCode: 404,
+          error: 'PERSON_NOT_FOUND',
+          message: 'Pessoa não encontrada.',
           timestamp: new Date().toISOString(),
           path: `/v1/people/${id}`,
         });
       }
-    }
-
-    if (dto.email && dto.email !== person.email) {
-      const emailExists = await this.personRepo.findOneBy({ email: dto.email });
-      if (emailExists) {
-        throw new ConflictException({
-          statusCode: 409,
-          error: ERROR_CODES.EMAIL_ALREADY_EXISTS,
-          message: 'Pessoa já existe com este email.',
-          timestamp: new Date().toISOString(),
-          path: `/v1/people/${id}`,
-        });
+      
+      if (error.code) {
+        console.error('Database error:', error);
+        throw error;
       }
+      
+      throw error;
     }
-
-    Object.assign(person, dto);
-    return this.personRepo.save(person);
   }
 
   async remove(id: string): Promise<{ message: string }> {
-    const person = await this.findOne(id);
-    await this.personRepo.remove(person);
-    return { message: 'Pessoa removida com sucesso' };
+    try {
+      const person = await this.findOne(id);
+      await this.personRepo.remove(person);
+      return { message: 'Pessoa removida com sucesso' };
+    } catch (error) {
+      if (error.code === '22P02' || error.message?.includes('invalid input syntax')) {
+        throw new NotFoundException({
+          statusCode: 404,
+          error: 'PERSON_NOT_FOUND',
+          message: 'Pessoa não encontrada.',
+          timestamp: new Date().toISOString(),
+          path: `/v1/people/${id}`,
+        });
+      }
+      
+      if (error.code) {
+        console.error('Database error:', error);
+        throw error; // Re-throw para manter 500
+      }
+      
+      throw error;
+    }
   }
 }
