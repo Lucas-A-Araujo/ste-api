@@ -42,8 +42,21 @@ export class PersonService {
     return this.personRepo.save(person);
   }
 
-  async findAll(): Promise<Person[]> {
-    return this.personRepo.find();
+  async findAll(searchTerm?: string): Promise<Person[]> {
+    if (!searchTerm || searchTerm === '') {
+      return this.personRepo.find();
+    }
+
+    const searchPattern = `%${searchTerm}%`;
+    
+    return this.personRepo
+      .createQueryBuilder('person')
+      .where('person.name ILIKE :searchTerm', { searchTerm: searchPattern })
+      .orWhere('person.email ILIKE :searchTerm', { searchTerm: searchPattern })
+      .orWhere('person.naturalness ILIKE :searchTerm', { searchTerm: searchPattern })
+      .orWhere('person.nationality ILIKE :searchTerm', { searchTerm: searchPattern })
+      .orWhere('person.cpf ILIKE :searchTerm', { searchTerm: searchPattern })
+      .getMany();
   }
 
   async findOne(id: number): Promise<Person> {
