@@ -101,11 +101,8 @@ export class PersonController {
     description: 'Lista paginada de pessoas retornada com sucesso',
     type: PaginatedResponseDto<Person>
   })
-  findAll(
-    @Query('q') searchTerm?: string,
-    @Query() pagination?: PaginationQueryDto
-  ) {
-    const cleanSearchTerm = searchTerm?.trim();
+  findAll(@Query() pagination?: PaginationQueryDto) {
+    const cleanSearchTerm = pagination?.q?.trim();
     return this.service.findAll(cleanSearchTerm, pagination);
   }
 
