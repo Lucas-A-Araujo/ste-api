@@ -6,6 +6,8 @@ import { CreatePersonDto } from './dto/create-person.dto';
 import { UpdatePersonDto } from './dto/update-person.dto';
 import { ERROR_CODES } from '../common/constants/error-codes';
 import { EncryptionService } from '../common/services/encryption.service';
+import { PaginationQueryDto } from './dto/pagination-query.dto';
+import { PaginatedResponseDto } from './dto/paginated-response.dto';
 
 @Injectable()
 export class PersonService {
@@ -74,31 +76,68 @@ export class PersonService {
     };
   }
 
-  async findAll(searchTerm?: string): Promise<Person[]> {
+  async findAll(searchTerm?: string, pagination?: PaginationQueryDto): Promise<PaginatedResponseDto<Person>> {
+    const page = pagination?.page || 1;
+    const limit = pagination?.limit || 10;
+    const skip = (page - 1) * limit;
+
     if (!searchTerm || searchTerm === '') {
-      const persons = await this.personRepo.find();
+      const [persons, total] = await this.personRepo.findAndCount({
+        skip,
+        take: limit,
+        order: { name: 'ASC' }
+      });
       
-      return persons.map(person => ({
+      const decryptedPersons = persons.map(person => ({
         ...person,
         cpf: this.safeDecrypt(person.cpf),
       }));
+
+      const totalPages = Math.ceil(total / limit);
+      
+      return {
+        data: decryptedPersons,
+        page,
+        limit,
+        total,
+        totalPages,
+        hasPrevious: page > 1,
+        hasNext: page < totalPages,
+      };
     }
 
     const searchPattern = `%${searchTerm}%`;
     
-    return this.personRepo
+    const queryBuilder = this.personRepo
       .createQueryBuilder('person')
       .where('person.name ILIKE :searchTerm', { searchTerm: searchPattern })
       .orWhere('person.email ILIKE :searchTerm', { searchTerm: searchPattern })
       .orWhere('person.naturalness ILIKE :searchTerm', { searchTerm: searchPattern })
       .orWhere('person.nationality ILIKE :searchTerm', { searchTerm: searchPattern })
       .orWhere('person.address ILIKE :searchTerm', { searchTerm: searchPattern })
-      .limit(50)
-      .getMany()
-      .then(persons => persons.map(person => ({
-        ...person,
-        cpf: this.safeDecrypt(person.cpf),
-      })));
+      .orderBy('person.name', 'ASC');
+
+    const [persons, total] = await queryBuilder
+      .skip(skip)
+      .take(limit)
+      .getManyAndCount();
+
+    const decryptedPersons = persons.map(person => ({
+      ...person,
+      cpf: this.safeDecrypt(person.cpf),
+    }));
+
+    const totalPages = Math.ceil(total / limit);
+    
+    return {
+      data: decryptedPersons,
+      page,
+      limit,
+      total,
+      totalPages,
+      hasPrevious: page > 1,
+      hasNext: page < totalPages,
+    };
   }
 
   async findOne(id: string): Promise<Person> {

@@ -11,6 +11,8 @@ import {
   PersonNotFoundErrorResponseDto,
   PersonConflictErrorResponseDto,
 } from './dto/person-error-response.dto';
+import { PaginationQueryDto } from './dto/pagination-query.dto';
+import { PaginatedResponseDto } from './dto/paginated-response.dto';
 
 @ApiTags('people')
 @Controller('people')
@@ -71,7 +73,7 @@ export class PersonController {
   @Version('1')
   @ApiOperation({ 
     summary: 'Listar todas as pessoas (v1)',
-    description: 'Retorna uma lista com todas as pessoas cadastradas no sistema. Aceita parâmetro de pesquisa opcional para filtrar resultados.'
+    description: 'Retorna uma lista paginada com todas as pessoas cadastradas no sistema. Aceita parâmetros de pesquisa e paginação.'
   })
   @ApiQuery({ 
     name: 'q', 
@@ -80,14 +82,31 @@ export class PersonController {
     type: String,
     example: 'João'
   })
+  @ApiQuery({ 
+    name: 'page', 
+    description: 'Número da página (começando em 1)',
+    required: false,
+    type: Number,
+    example: 1
+  })
+  @ApiQuery({ 
+    name: 'limit', 
+    description: 'Número de itens por página (máximo 100)',
+    required: false,
+    type: Number,
+    example: 10
+  })
   @ApiResponse({ 
     status: 200, 
-    description: 'Lista de pessoas retornada com sucesso',
-    type: [Person]
+    description: 'Lista paginada de pessoas retornada com sucesso',
+    type: PaginatedResponseDto<Person>
   })
-  findAll(@Query('q') searchTerm?: string) {
+  findAll(
+    @Query('q') searchTerm?: string,
+    @Query() pagination?: PaginationQueryDto
+  ) {
     const cleanSearchTerm = searchTerm?.trim();
-    return this.service.findAll(cleanSearchTerm);
+    return this.service.findAll(cleanSearchTerm, pagination);
   }
 
   @Get(':id')
