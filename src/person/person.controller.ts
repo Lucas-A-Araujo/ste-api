@@ -1,5 +1,5 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Version } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
+import { Body, Controller, Delete, Get, Param, Post, Put, Version, Query } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody, ApiQuery } from '@nestjs/swagger';
 import { PersonService } from './person.service';
 import { CreatePersonDto } from './dto/create-person.dto';
 import { UpdatePersonDto } from './dto/update-person.dto';
@@ -71,15 +71,23 @@ export class PersonController {
   @Version('1')
   @ApiOperation({ 
     summary: 'Listar todas as pessoas (v1)',
-    description: 'Retorna uma lista com todas as pessoas cadastradas no sistema.'
+    description: 'Retorna uma lista com todas as pessoas cadastradas no sistema. Aceita parâmetro de pesquisa opcional para filtrar resultados.'
+  })
+  @ApiQuery({ 
+    name: 'q', 
+    description: 'Termo de pesquisa que será buscado em todos os campos (nome, email, naturalidade, nacionalidade, CPF)',
+    required: false,
+    type: String,
+    example: 'João'
   })
   @ApiResponse({ 
     status: 200, 
     description: 'Lista de pessoas retornada com sucesso',
     type: [Person]
   })
-  findAll() {
-    return this.service.findAll();
+  findAll(@Query('q') searchTerm?: string) {
+    const cleanSearchTerm = searchTerm?.trim();
+    return this.service.findAll(cleanSearchTerm);
   }
 
   @Get(':id')

@@ -8,19 +8,15 @@ export function IsCPF(validationOptions?: ValidationOptions) {
       propertyName: propertyName,
       options: validationOptions,
       validator: {
-        validate(value: any, args: ValidationArguments) {
+        validate(value: any) {
           if (typeof value !== 'string') return false;
           
-          // Remove caracteres não numéricos
           const cpf = value.replace(/[^\d]/g, '');
           
-          // Verifica se tem 11 dígitos
           if (cpf.length !== 11) return false;
           
-          // Verifica se todos os dígitos são iguais
           if (/^(\d)\1{10}$/.test(cpf)) return false;
           
-          // Validação do primeiro dígito verificador
           let sum = 0;
           for (let i = 0; i < 9; i++) {
             sum += parseInt(cpf.charAt(i)) * (10 - i);
@@ -29,7 +25,6 @@ export function IsCPF(validationOptions?: ValidationOptions) {
           if (remainder === 10 || remainder === 11) remainder = 0;
           if (remainder !== parseInt(cpf.charAt(9))) return false;
           
-          // Validação do segundo dígito verificador
           sum = 0;
           for (let i = 0; i < 10; i++) {
             sum += parseInt(cpf.charAt(i)) * (11 - i);
