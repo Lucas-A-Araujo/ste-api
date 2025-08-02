@@ -5,13 +5,35 @@ import { Person } from './entities/person.entity';
 import { CreatePersonDto } from './dto/create-person.dto';
 import { UpdatePersonDto } from './dto/update-person.dto';
 import { ERROR_CODES } from '../common/constants/error-codes';
+import { EncryptionService } from '../common/services/encryption.service';
 
 @Injectable()
 export class PersonService {
   constructor(
     @InjectRepository(Person)
     private personRepo: Repository<Person>,
+    private encryptionService: EncryptionService,
   ) {}
+
+  private isEncrypted(data: string): boolean {
+    if (!data) return false;
+    return data.startsWith('U2FsdGVkX1');
+  }
+
+  private safeDecrypt(data: string): string {
+    if (!data) return data;
+    
+    if (!this.isEncrypted(data)) {
+      return data;
+    }
+    
+    try {
+      const decrypted = this.encryptionService.decrypt(data);
+      return decrypted;
+    } catch (error) {
+      return data;
+    }
+  }
 
   async create(dto: CreatePersonDto): Promise<Person> {
     const existingCpf = await this.personRepo.findOneBy({ cpf: dto.cpf });
@@ -38,13 +60,28 @@ export class PersonService {
       }
     }
 
-    const person = this.personRepo.create(dto);
-    return this.personRepo.save(person);
+    const encryptedCPF = this.encryptionService.encrypt(dto.cpf);
+
+    const person = this.personRepo.create({
+      ...dto,
+      cpf: encryptedCPF,
+    });
+    const savedPerson = await this.personRepo.save(person);
+
+    return {
+      ...savedPerson,
+      cpf: this.safeDecrypt(savedPerson.cpf),
+    };
   }
 
   async findAll(searchTerm?: string): Promise<Person[]> {
     if (!searchTerm || searchTerm === '') {
-      return this.personRepo.find();
+      const persons = await this.personRepo.find();
+      
+      return persons.map(person => ({
+        ...person,
+        cpf: this.safeDecrypt(person.cpf),
+      }));
     }
 
     const searchPattern = `%${searchTerm}%`;
@@ -55,8 +92,13 @@ export class PersonService {
       .orWhere('person.email ILIKE :searchTerm', { searchTerm: searchPattern })
       .orWhere('person.naturalness ILIKE :searchTerm', { searchTerm: searchPattern })
       .orWhere('person.nationality ILIKE :searchTerm', { searchTerm: searchPattern })
-      .orWhere('person.cpf ILIKE :searchTerm', { searchTerm: searchPattern })
-      .getMany();
+      .orWhere('person.address ILIKE :searchTerm', { searchTerm: searchPattern })
+      .limit(50)
+      .getMany()
+      .then(persons => persons.map(person => ({
+        ...person,
+        cpf: this.safeDecrypt(person.cpf),
+      })));
   }
 
   async findOne(id: string): Promise<Person> {
@@ -71,7 +113,10 @@ export class PersonService {
           path: `/v1/people/${id}`,
         });
       }
-      return person;
+      return {
+        ...person,
+        cpf: this.safeDecrypt(person.cpf),
+      };
     } catch (error) {
       if (error.code === '22P02' || error.message?.includes('invalid input syntax')) {
         throw new NotFoundException({
@@ -122,8 +167,31 @@ export class PersonService {
         }
       }
 
-      Object.assign(person, dto);
-      return this.personRepo.save(person);
+      const originalPerson = await this.personRepo.findOneBy({ id });
+      if (!originalPerson) {
+        throw new NotFoundException({
+          statusCode: 404,
+          error: ERROR_CODES.PERSON_NOT_FOUND,
+          message: 'Pessoa não encontrada.',
+          timestamp: new Date().toISOString(),
+          path: `/v1/people/${id}`,
+        });
+      }
+
+      if (dto.cpf) originalPerson.cpf = this.encryptionService.encrypt(dto.cpf);
+      if (dto.email) originalPerson.email = dto.email;
+      if (dto.address) originalPerson.address = dto.address;
+      if (dto.name) originalPerson.name = dto.name;
+      if (dto.gender) originalPerson.gender = dto.gender;
+      if (dto.birthDate) originalPerson.birthDate = new Date(dto.birthDate);
+      if (dto.naturalness) originalPerson.naturalness = dto.naturalness;
+      if (dto.nationality) originalPerson.nationality = dto.nationality;
+
+      const updatedPerson = await this.personRepo.save(originalPerson);
+      return {
+        ...updatedPerson,
+        cpf: this.safeDecrypt(updatedPerson.cpf),
+      };
     } catch (error) {
       if (error.code === '22P02' || error.message?.includes('invalid input syntax')) {
         throw new NotFoundException({
@@ -162,7 +230,7 @@ export class PersonService {
       
       if (error.code) {
         console.error('Database error:', error);
-        throw error; // Re-throw para manter 500
+        throw error;
       }
       
       throw error;
