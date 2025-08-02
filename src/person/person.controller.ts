@@ -6,12 +6,12 @@ import { UpdatePersonDto } from './dto/update-person.dto';
 import { CreatePersonV2Dto } from './dto/create-person-v2.dto';
 import { UpdatePersonV2Dto } from './dto/update-person-v2.dto';
 import { Person } from './entities/person.entity';
+import { GenericErrorResponseDto } from '../common/dto/error-response.dto';
 import { 
-  ErrorResponseDto, 
-  ValidationErrorResponseDto, 
-  NotFoundErrorResponseDto, 
-  ConflictErrorResponseDto 
-} from '../common/dto/error-response.dto';
+  PersonValidationErrorResponseDto,
+  PersonNotFoundErrorResponseDto,
+  PersonConflictErrorResponseDto,
+} from './dto/person-error-response.dto';
 
 @ApiTags('people')
 @Controller('people')
@@ -32,17 +32,17 @@ export class PersonController {
   @ApiResponse({ 
     status: 400, 
     description: 'Dados inválidos',
-    type: ValidationErrorResponseDto
+    type: PersonValidationErrorResponseDto
   })
   @ApiResponse({ 
     status: 409, 
-    description: 'CPF ou email já existe no sistema',
-    type: ConflictErrorResponseDto
+    description: 'CPF ou email já cadastrado',
+    type: PersonConflictErrorResponseDto
   })
   @ApiResponse({ 
     status: 500, 
     description: 'Erro interno do servidor',
-    type: ErrorResponseDto
+    type: GenericErrorResponseDto
   })
   create(@Body() dto: CreatePersonDto) {
     return this.service.create(dto);
@@ -62,17 +62,17 @@ export class PersonController {
   @ApiResponse({ 
     status: 400, 
     description: 'Dados inválidos',
-    type: ValidationErrorResponseDto
+    type: PersonValidationErrorResponseDto
   })
   @ApiResponse({ 
     status: 409, 
-    description: 'CPF ou email já existe no sistema',
-    type: ConflictErrorResponseDto
+    description: 'CPF ou email já cadastrado',
+    type: PersonConflictErrorResponseDto
   })
   @ApiResponse({ 
     status: 500, 
     description: 'Erro interno do servidor',
-    type: ErrorResponseDto
+    type: GenericErrorResponseDto
   })
   createV2(@Body() dto: CreatePersonV2Dto) {
     return this.service.create(dto);
@@ -92,7 +92,7 @@ export class PersonController {
   @ApiResponse({ 
     status: 500, 
     description: 'Erro interno do servidor',
-    type: ErrorResponseDto
+    type: GenericErrorResponseDto
   })
   findAll() {
     return this.service.findAll();
@@ -118,17 +118,12 @@ export class PersonController {
   @ApiResponse({ 
     status: 404, 
     description: 'Pessoa não encontrada',
-    type: NotFoundErrorResponseDto
-  })
-  @ApiResponse({ 
-    status: 400, 
-    description: 'ID inválido',
-    type: ValidationErrorResponseDto
+    type: PersonNotFoundErrorResponseDto
   })
   @ApiResponse({ 
     status: 500, 
     description: 'Erro interno do servidor',
-    type: ErrorResponseDto
+    type: GenericErrorResponseDto
   })
   findOne(@Param('id') id: string) {
     return this.service.findOne(+id);
@@ -154,22 +149,27 @@ export class PersonController {
   @ApiResponse({ 
     status: 404, 
     description: 'Pessoa não encontrada',
-    type: NotFoundErrorResponseDto
+    type: PersonNotFoundErrorResponseDto
   })
   @ApiResponse({ 
     status: 400, 
     description: 'Dados inválidos',
-    type: ValidationErrorResponseDto
+    type: PersonValidationErrorResponseDto
   })
   @ApiResponse({ 
     status: 409, 
-    description: 'CPF ou email já existe no sistema',
-    type: ConflictErrorResponseDto
+    description: 'CPF já cadastrado ou Email já cadastrado',
+    schema: {
+      oneOf: [
+        { $ref: '#/components/schemas/PersonConflictCPFErrorResponseDto' },
+        { $ref: '#/components/schemas/PersonConflictEmailErrorResponseDto' }
+      ]
+    }
   })
   @ApiResponse({ 
     status: 500, 
     description: 'Erro interno do servidor',
-    type: ErrorResponseDto
+    type: GenericErrorResponseDto
   })
   update(@Param('id') id: string, @Body() dto: UpdatePersonDto) {
     return this.service.update(+id, dto);
@@ -195,22 +195,27 @@ export class PersonController {
   @ApiResponse({ 
     status: 404, 
     description: 'Pessoa não encontrada',
-    type: NotFoundErrorResponseDto
+    type: PersonNotFoundErrorResponseDto
   })
   @ApiResponse({ 
     status: 400, 
     description: 'Dados inválidos',
-    type: ValidationErrorResponseDto
+    type: PersonValidationErrorResponseDto
   })
   @ApiResponse({ 
     status: 409, 
-    description: 'CPF ou email já existe no sistema',
-    type: ConflictErrorResponseDto
+    description: 'CPF já cadastrado ou Email já cadastrado',
+    schema: {
+      oneOf: [
+        { $ref: '#/components/schemas/PersonConflictCPFErrorResponseDto' },
+        { $ref: '#/components/schemas/PersonConflictEmailErrorResponseDto' }
+      ]
+    }
   })
   @ApiResponse({ 
     status: 500, 
     description: 'Erro interno do servidor',
-    type: ErrorResponseDto
+    type: GenericErrorResponseDto
   })
   updateV2(@Param('id') id: string, @Body() dto: UpdatePersonV2Dto) {
     return this.service.update(+id, dto);
@@ -244,17 +249,12 @@ export class PersonController {
   @ApiResponse({ 
     status: 404, 
     description: 'Pessoa não encontrada',
-    type: NotFoundErrorResponseDto
-  })
-  @ApiResponse({ 
-    status: 400, 
-    description: 'ID inválido',
-    type: ValidationErrorResponseDto
+    type: PersonNotFoundErrorResponseDto
   })
   @ApiResponse({ 
     status: 500, 
     description: 'Erro interno do servidor',
-    type: ErrorResponseDto
+    type: GenericErrorResponseDto
   })
   remove(@Param('id') id: string) {
     return this.service.remove(+id);
