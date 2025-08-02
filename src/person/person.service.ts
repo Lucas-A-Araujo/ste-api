@@ -59,7 +59,7 @@ export class PersonService {
       .getMany();
   }
 
-  async findOne(id: number): Promise<Person> {
+  async findOne(id: string): Promise<Person> {
     const person = await this.personRepo.findOneBy({ id });
     if (!person) {
       throw new NotFoundException({
@@ -73,7 +73,7 @@ export class PersonService {
     return person;
   }
 
-  async update(id: number, dto: UpdatePersonDto): Promise<Person> {
+  async update(id: string, dto: UpdatePersonDto): Promise<Person> {
     const person = await this.findOne(id);
 
     if (dto.cpf && dto.cpf !== person.cpf) {
@@ -106,7 +106,7 @@ export class PersonService {
     return this.personRepo.save(person);
   }
 
-  async remove(id: number): Promise<{ message: string }> {
+  async remove(id: string): Promise<{ message: string }> {
     const person = await this.findOne(id);
     await this.personRepo.remove(person);
     return { message: 'Pessoa removida com sucesso' };

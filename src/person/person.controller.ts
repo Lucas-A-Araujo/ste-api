@@ -99,8 +99,8 @@ export class PersonController {
   @ApiParam({ 
     name: 'id', 
     description: 'ID único da pessoa',
-    example: 1,
-    type: 'number'
+    example: '550e8400-e29b-41d4-a716-446655440000',
+    type: 'string'
   })
   @ApiResponse({ 
     status: 200, 
@@ -113,7 +113,7 @@ export class PersonController {
     type: PersonNotFoundErrorResponseDto
   })
   findOne(@Param('id') id: string) {
-    return this.service.findOne(+id);
+    return this.service.findOne(id);
   }
 
   @Put(':id')
@@ -125,8 +125,8 @@ export class PersonController {
   @ApiParam({ 
     name: 'id', 
     description: 'ID único da pessoa',
-    example: 1,
-    type: 'number'
+    example: '550e8400-e29b-41d4-a716-446655440000',
+    type: 'string'
   })
   @ApiResponse({ 
     status: 200, 
@@ -154,7 +154,7 @@ export class PersonController {
     }
   })
   update(@Param('id') id: string, @Body() dto: UpdatePersonDto) {
-    return this.service.update(+id, dto);
+    return this.service.update(id, dto);
   }
 
   @Put(':id')
@@ -166,8 +166,8 @@ export class PersonController {
   @ApiParam({ 
     name: 'id', 
     description: 'ID único da pessoa',
-    example: 1,
-    type: 'number'
+    example: '550e8400-e29b-41d4-a716-446655440000',
+    type: 'string'
   })
   @ApiResponse({ 
     status: 200, 
@@ -195,7 +195,7 @@ export class PersonController {
     }
   })
   updateV2(@Param('id') id: string, @Body() dto: UpdatePersonV2Dto) {
-    return this.service.update(+id, dto);
+    return this.service.update(id, dto);
   }
 
   @Delete(':id')
@@ -207,8 +207,8 @@ export class PersonController {
   @ApiParam({ 
     name: 'id', 
     description: 'ID único da pessoa',
-    example: 1,
-    type: 'number'
+    example: '550e8400-e29b-41d4-a716-446655440000',
+    type: 'string'
   })
   @ApiResponse({ 
     status: 200, 
@@ -229,6 +229,6 @@ export class PersonController {
     type: PersonNotFoundErrorResponseDto
   })
   remove(@Param('id') id: string) {
-    return this.service.remove(+id);
+    return this.service.remove(id);
   }
 }
