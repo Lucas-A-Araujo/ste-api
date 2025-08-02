@@ -5,12 +5,16 @@ import { Person } from '../person/entities/person.entity';
 import { PersonService } from '../person/person.service';
 import { CreatePersonDto } from '../person/dto/create-person.dto';
 import { fakePersonsData } from './data/fake-persons-final.data';
+import { User } from '../auth/entities/user.entity';
+import { createUsers } from './create-users.seed';
 
 @Injectable()
 export class SeedCommand {
   constructor(
     @InjectRepository(Person)
     private personRepo: Repository<Person>,
+    @InjectRepository(User)
+    private userRepo: Repository<User>,
     private personService: PersonService,
   ) {}
 
@@ -18,6 +22,10 @@ export class SeedCommand {
     console.log('🌱 Iniciando seed do banco de dados...');
 
     try {
+      // Criar usuários primeiro
+      console.log('👤 Criando usuários...');
+      await createUsers(this.personRepo.manager.connection);
+
       const existingCount = await this.personRepo.count();
       if (existingCount > 0) {
         console.log(`🗑️  Removendo ${existingCount} registros existentes...`);
