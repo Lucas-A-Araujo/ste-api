@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Person } from '../person/entities/person.entity';
+import { PersonService } from '../person/person.service';
+import { CreatePersonDto } from '../person/dto/create-person.dto';
 import { fakePersonsData } from './data/fake-persons-final.data';
 
 @Injectable()
@@ -9,6 +11,7 @@ export class SeedCommand {
   constructor(
     @InjectRepository(Person)
     private personRepo: Repository<Person>,
+    private personService: PersonService,
   ) {}
 
   async run(): Promise<void> {
@@ -22,7 +25,16 @@ export class SeedCommand {
       }
 
       console.log(`📝 Inserindo ${fakePersonsData.length} registros...`);
-      const createdPersons = await this.personRepo.save(fakePersonsData);
+      
+      const createdPersons: Person[] = [];
+      for (const personData of fakePersonsData) {
+        const createDto: CreatePersonDto = {
+          ...personData,
+          birthDate: personData.birthDate.toISOString().split('T')[0], // Converte Date para string
+        };
+        const createdPerson = await this.personService.create(createDto);
+        createdPersons.push(createdPerson);
+      }
 
       console.log(`✅ Seed concluído com sucesso!`);
       console.log(`📊 Total de pessoas criadas: ${createdPersons.length}`);
