@@ -6,7 +6,6 @@ import { UpdatePersonDto } from './dto/update-person.dto';
 import { CreatePersonV2Dto } from './dto/create-person-v2.dto';
 import { UpdatePersonV2Dto } from './dto/update-person-v2.dto';
 import { Person } from './entities/person.entity';
-import { GenericErrorResponseDto } from '../common/dto/error-response.dto';
 import { 
   PersonValidationErrorResponseDto,
   PersonNotFoundErrorResponseDto,
@@ -39,11 +38,6 @@ export class PersonController {
     description: 'CPF ou email já cadastrado',
     type: PersonConflictErrorResponseDto
   })
-  @ApiResponse({ 
-    status: 500, 
-    description: 'Erro interno do servidor',
-    type: GenericErrorResponseDto
-  })
   create(@Body() dto: CreatePersonDto) {
     return this.service.create(dto);
   }
@@ -69,11 +63,6 @@ export class PersonController {
     description: 'CPF ou email já cadastrado',
     type: PersonConflictErrorResponseDto
   })
-  @ApiResponse({ 
-    status: 500, 
-    description: 'Erro interno do servidor',
-    type: GenericErrorResponseDto
-  })
   createV2(@Body() dto: CreatePersonV2Dto) {
     return this.service.create(dto);
   }
@@ -88,11 +77,6 @@ export class PersonController {
     status: 200, 
     description: 'Lista de pessoas retornada com sucesso',
     type: [Person]
-  })
-  @ApiResponse({ 
-    status: 500, 
-    description: 'Erro interno do servidor',
-    type: GenericErrorResponseDto
   })
   findAll() {
     return this.service.findAll();
@@ -119,11 +103,6 @@ export class PersonController {
     status: 404, 
     description: 'Pessoa não encontrada',
     type: PersonNotFoundErrorResponseDto
-  })
-  @ApiResponse({ 
-    status: 500, 
-    description: 'Erro interno do servidor',
-    type: GenericErrorResponseDto
   })
   findOne(@Param('id') id: string) {
     return this.service.findOne(+id);
@@ -166,11 +145,6 @@ export class PersonController {
       ]
     }
   })
-  @ApiResponse({ 
-    status: 500, 
-    description: 'Erro interno do servidor',
-    type: GenericErrorResponseDto
-  })
   update(@Param('id') id: string, @Body() dto: UpdatePersonDto) {
     return this.service.update(+id, dto);
   }
@@ -212,11 +186,6 @@ export class PersonController {
       ]
     }
   })
-  @ApiResponse({ 
-    status: 500, 
-    description: 'Erro interno do servidor',
-    type: GenericErrorResponseDto
-  })
   updateV2(@Param('id') id: string, @Body() dto: UpdatePersonV2Dto) {
     return this.service.update(+id, dto);
   }
@@ -250,11 +219,6 @@ export class PersonController {
     status: 404, 
     description: 'Pessoa não encontrada',
     type: PersonNotFoundErrorResponseDto
-  })
-  @ApiResponse({ 
-    status: 500, 
-    description: 'Erro interno do servidor',
-    type: GenericErrorResponseDto
   })
   remove(@Param('id') id: string) {
     return this.service.remove(+id);
