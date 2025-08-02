@@ -5,6 +5,7 @@ import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 import { ValidationErrorInterceptor } from './common/interceptors/validation-error.interceptor';
+import { AuthExceptionFilter } from './common/filters/auth-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -20,7 +21,7 @@ async function bootstrap() {
     type: VersioningType.URI,
   });
 
-  app.useGlobalFilters(new GlobalExceptionFilter());
+  app.useGlobalFilters(new GlobalExceptionFilter(), new AuthExceptionFilter());
 
   app.useGlobalInterceptors(new ValidationErrorInterceptor());
 
@@ -29,6 +30,7 @@ async function bootstrap() {
     .setDescription('API para gerenciamento de pessoas - Ste')
     .setVersion('1.0')
     .addTag('people', 'Operações relacionadas a pessoas')
+    .addTag('auth', 'Operações de autenticação')
     .addBearerAuth()
     .build();
 

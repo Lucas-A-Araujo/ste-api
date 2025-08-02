@@ -1,5 +1,5 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Version, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody, ApiQuery } from '@nestjs/swagger';
+import { Body, Controller, Delete, Get, Param, Post, Put, Version, Query, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
 import { PersonService } from './person.service';
 import { CreatePersonDto } from './dto/create-person.dto';
 import { UpdatePersonDto } from './dto/update-person.dto';
@@ -13,9 +13,12 @@ import {
 } from './dto/person-error-response.dto';
 import { PaginationQueryDto } from './dto/pagination-query.dto';
 import { PaginatedResponseDto } from './dto/paginated-response.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @ApiTags('people')
 @Controller('people')
+@UseGuards(JwtAuthGuard)
+@ApiBearerAuth()
 export class PersonController {
   constructor(private readonly service: PersonService) {}
 
