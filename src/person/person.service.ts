@@ -43,7 +43,7 @@ export class PersonService {
       throw new ConflictException({
         statusCode: 409,
         error: ERROR_CODES.PERSON_ALREADY_EXISTS,
-        message: 'Pessoa já existe.',
+        message: ['Pessoa já existe.'],
         timestamp: new Date().toISOString(),
         path: '/v1/people',
       });
@@ -55,7 +55,7 @@ export class PersonService {
         throw new ConflictException({
           statusCode: 409,
           error: ERROR_CODES.EMAIL_ALREADY_EXISTS,
-          message: 'Pessoa já existe com este email.',
+          message: ['Pessoa já existe com este email.'],
           timestamp: new Date().toISOString(),
           path: '/v1/people',
         });
@@ -147,7 +147,7 @@ export class PersonService {
         throw new NotFoundException({
           statusCode: 404,
           error: ERROR_CODES.PERSON_NOT_FOUND,
-          message: 'Pessoa não encontrada.',
+          message: ['Pessoa não encontrada.'],
           timestamp: new Date().toISOString(),
           path: `/v1/people/${id}`,
         });
@@ -161,7 +161,7 @@ export class PersonService {
         throw new NotFoundException({
           statusCode: 404,
           error: 'PERSON_NOT_FOUND',
-          message: 'Pessoa não encontrada.',
+          message: ['Pessoa não encontrada.'],
           timestamp: new Date().toISOString(),
           path: `/v1/people/${id}`,
         });
@@ -186,7 +186,7 @@ export class PersonService {
           throw new ConflictException({
             statusCode: 409,
             error: ERROR_CODES.PERSON_ALREADY_EXISTS,
-            message: 'Pessoa já existe com este CPF.',
+            message: ['Pessoa já existe com este CPF.'],
             timestamp: new Date().toISOString(),
             path: `/v1/people/${id}`,
           });
@@ -199,7 +199,7 @@ export class PersonService {
           throw new ConflictException({
             statusCode: 409,
             error: ERROR_CODES.EMAIL_ALREADY_EXISTS,
-            message: 'Pessoa já existe com este email.',
+            message: ['Pessoa já existe com este email.'],
             timestamp: new Date().toISOString(),
             path: `/v1/people/${id}`,
           });
@@ -211,7 +211,7 @@ export class PersonService {
         throw new NotFoundException({
           statusCode: 404,
           error: ERROR_CODES.PERSON_NOT_FOUND,
-          message: 'Pessoa não encontrada.',
+          message: ['Pessoa não encontrada.'],
           timestamp: new Date().toISOString(),
           path: `/v1/people/${id}`,
         });
@@ -236,7 +236,7 @@ export class PersonService {
         throw new NotFoundException({
           statusCode: 404,
           error: 'PERSON_NOT_FOUND',
-          message: 'Pessoa não encontrada.',
+          message: ['Pessoa não encontrada.'],
           timestamp: new Date().toISOString(),
           path: `/v1/people/${id}`,
         });
@@ -261,7 +261,7 @@ export class PersonService {
         throw new NotFoundException({
           statusCode: 404,
           error: 'PERSON_NOT_FOUND',
-          message: 'Pessoa não encontrada.',
+          message: ['Pessoa não encontrada.'],
           timestamp: new Date().toISOString(),
           path: `/v1/people/${id}`,
         });

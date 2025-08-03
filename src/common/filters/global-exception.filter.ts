@@ -24,7 +24,12 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         (responseContent as any).error &&
         (responseContent as any).statusCode
       ) {
-        response.status(status).json(responseContent);
+        // Se já tem uma estrutura de erro, apenas garante que message seja array
+        const errorResponse = responseContent as any;
+        if (!Array.isArray(errorResponse.message)) {
+          errorResponse.message = [errorResponse.message];
+        }
+        response.status(status).json(errorResponse);
         return;
       }
 
@@ -60,7 +65,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     response.status(status).json({
       statusCode: status,
       error,
-      message,
+      message: [message], // Sempre em array
       timestamp: new Date().toISOString(),
       path: request.url,
     });

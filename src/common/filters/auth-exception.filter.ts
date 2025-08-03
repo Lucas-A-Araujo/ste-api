@@ -13,6 +13,7 @@ export class AuthExceptionFilter implements ExceptionFilter {
     let errorCode = 'UNAUTHORIZED';
     let errorMessage = message;
 
+    // Determinar o tipo específico de erro
     if (message.includes('jwt') || message.includes('token')) {
       errorCode = 'INVALID_TOKEN';
       errorMessage = 'Token inválido ou expirado';
@@ -29,7 +30,7 @@ export class AuthExceptionFilter implements ExceptionFilter {
 
     const errorResponse = {
       statusCode: status,
-      message: errorMessage,
+      message: [errorMessage], // Sempre em array
       error: errorCode,
       timestamp: new Date().toISOString(),
     };
