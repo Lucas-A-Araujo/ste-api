@@ -10,7 +10,7 @@ describe('PersonController', () => {
   let service: PersonService;
 
   const mockPerson: Person = {
-    id: 1,
+    id: '550e8400-e29b-41d4-a716-446655440000',
     name: 'João Silva',
     email: 'joao@email.com',
     birthDate: new Date('1990-01-01'),
@@ -108,26 +108,26 @@ describe('PersonController', () => {
     it('should return a person by id', async () => {
       mockPersonService.findOne.mockResolvedValue(mockPerson);
 
-      const result = await controller.findOne('1');
+      const result = await controller.findOne('550e8400-e29b-41d4-a716-446655440000');
 
-      expect(service.findOne).toHaveBeenCalledWith(1);
+      expect(service.findOne).toHaveBeenCalledWith('550e8400-e29b-41d4-a716-446655440000');
       expect(result).toEqual(mockPerson);
     });
 
-    it('should convert string id to number', async () => {
+    it('should pass string id to service', async () => {
       mockPersonService.findOne.mockResolvedValue(mockPerson);
 
-      await controller.findOne('123');
+      await controller.findOne('660e8400-e29b-41d4-a716-446655440000');
 
-      expect(service.findOne).toHaveBeenCalledWith(123);
+      expect(service.findOne).toHaveBeenCalledWith('660e8400-e29b-41d4-a716-446655440000');
     });
 
     it('should handle invalid id parameter', async () => {
       mockPersonService.findOne.mockResolvedValue(mockPerson);
 
-      await controller.findOne('abc');
+      await controller.findOne('invalid-uuid');
 
-      expect(service.findOne).toHaveBeenCalledWith(NaN);
+      expect(service.findOne).toHaveBeenCalledWith('invalid-uuid');
     });
   });
 
@@ -141,27 +141,27 @@ describe('PersonController', () => {
       const updatedPerson = { ...mockPerson, ...updatePersonDto };
       mockPersonService.update.mockResolvedValue(updatedPerson);
 
-      const result = await controller.update('1', updatePersonDto);
+      const result = await controller.update('550e8400-e29b-41d4-a716-446655440000', updatePersonDto);
 
-      expect(service.update).toHaveBeenCalledWith(1, updatePersonDto);
+      expect(service.update).toHaveBeenCalledWith('550e8400-e29b-41d4-a716-446655440000', updatePersonDto);
       expect(result).toEqual(updatedPerson);
     });
 
-    it('should convert string id to number', async () => {
+    it('should pass string id to service', async () => {
       mockPersonService.update.mockResolvedValue(mockPerson);
 
-      await controller.update('456', updatePersonDto);
+      await controller.update('660e8400-e29b-41d4-a716-446655440000', updatePersonDto);
 
-      expect(service.update).toHaveBeenCalledWith(456, updatePersonDto);
+      expect(service.update).toHaveBeenCalledWith('660e8400-e29b-41d4-a716-446655440000', updatePersonDto);
     });
 
     it('should pass partial DTO correctly', async () => {
       const partialDto = { name: 'Novo Nome' };
       mockPersonService.update.mockResolvedValue(mockPerson);
 
-      await controller.update('1', partialDto);
+      await controller.update('550e8400-e29b-41d4-a716-446655440000', partialDto);
 
-      expect(service.update).toHaveBeenCalledWith(1, partialDto);
+      expect(service.update).toHaveBeenCalledWith('550e8400-e29b-41d4-a716-446655440000', partialDto);
     });
   });
 
@@ -169,17 +169,17 @@ describe('PersonController', () => {
     it('should remove a person', async () => {
       mockPersonService.remove.mockResolvedValue(undefined);
 
-      await controller.remove('1');
+      await controller.remove('550e8400-e29b-41d4-a716-446655440000');
 
-      expect(service.remove).toHaveBeenCalledWith(1);
+      expect(service.remove).toHaveBeenCalledWith('550e8400-e29b-41d4-a716-446655440000');
     });
 
-    it('should convert string id to number', async () => {
+    it('should pass string id to service', async () => {
       mockPersonService.remove.mockResolvedValue(undefined);
 
-      await controller.remove('789');
+      await controller.remove('660e8400-e29b-41d4-a716-446655440000');
 
-      expect(service.remove).toHaveBeenCalledWith(789);
+      expect(service.remove).toHaveBeenCalledWith('660e8400-e29b-41d4-a716-446655440000');
     });
   });
 

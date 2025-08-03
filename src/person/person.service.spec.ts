@@ -17,11 +17,12 @@ describe('PersonService', () => {
     find: jest.fn(),
     findOne: jest.fn(),
     findOneBy: jest.fn(),
+    findAndCount: jest.fn(),
     remove: jest.fn(),
   };
 
   const mockPerson: Person = {
-    id: 1,
+    id: '550e8400-e29b-41d4-a716-446655440000',
     name: 'João Silva',
     email: 'joao@email.com',
     birthDate: new Date('1990-01-01'),
@@ -64,34 +65,35 @@ describe('PersonService', () => {
 
   describe('create', () => {
     it('should create a new person successfully', async () => {
-      mockRepository.findOne.mockResolvedValue(null);
+      mockRepository.findOneBy
+        .mockResolvedValueOnce(null) // CPF check
+        .mockResolvedValueOnce(null); // Email check
       mockRepository.create.mockReturnValue(mockPerson);
       mockRepository.save.mockResolvedValue(mockPerson);
 
       const result = await service.create(createPersonDto);
 
-      expect(repository.findOne).toHaveBeenCalledWith({
-        where: [{ cpf: createPersonDto.cpf }, { email: createPersonDto.email }],
-      });
+      expect(repository.findOneBy).toHaveBeenCalledWith({ cpf: createPersonDto.cpf });
+      expect(repository.findOneBy).toHaveBeenCalledWith({ email: createPersonDto.email });
       expect(repository.create).toHaveBeenCalledWith(createPersonDto);
       expect(repository.save).toHaveBeenCalledWith(mockPerson);
-      expect(result).toEqual(mockPerson);
+      expect(result.cpf).toBe('***.456.789-**');
     });
 
     it('should throw ConflictException when CPF already exists', async () => {
-      mockRepository.findOne.mockResolvedValue(mockPerson);
+      mockRepository.findOneBy.mockResolvedValue(mockPerson);
 
       await expect(service.create(createPersonDto)).rejects.toThrow(
         ConflictException,
       );
-      expect(repository.findOne).toHaveBeenCalledWith({
-        where: [{ cpf: createPersonDto.cpf }, { email: createPersonDto.email }],
-      });
+      expect(repository.findOneBy).toHaveBeenCalledWith({ cpf: createPersonDto.cpf });
     });
 
     it('should throw ConflictException when email already exists', async () => {
       const existingPerson = { ...mockPerson, cpf: '999.999.999-99' };
-      mockRepository.findOne.mockResolvedValue(existingPerson);
+      mockRepository.findOneBy
+        .mockResolvedValueOnce(null) // CPF check
+        .mockResolvedValueOnce(existingPerson); // Email check
 
       await expect(service.create(createPersonDto)).rejects.toThrow(
         ConflictException,
@@ -102,20 +104,24 @@ describe('PersonService', () => {
   describe('findAll', () => {
     it('should return all people', async () => {
       const people = [mockPerson];
-      mockRepository.find.mockResolvedValue(people);
+      mockRepository.findAndCount.mockResolvedValue([people, 1]);
 
       const result = await service.findAll();
 
-      expect(repository.find).toHaveBeenCalled();
-      expect(result).toEqual(people);
+      expect(repository.findAndCount).toHaveBeenCalledWith({
+        skip: 0,
+        take: 10,
+        order: { name: 'ASC' }
+      });
+      expect(result.data[0].cpf).toBe('***.456.789-**');
     });
 
     it('should return empty array when no people exist', async () => {
-      mockRepository.find.mockResolvedValue([]);
+      mockRepository.findAndCount.mockResolvedValue([[], 0]);
 
       const result = await service.findAll();
 
-      expect(result).toEqual([]);
+      expect(result.data).toEqual([]);
     });
   });
 
@@ -123,17 +129,17 @@ describe('PersonService', () => {
     it('should return a person by id', async () => {
       mockRepository.findOneBy.mockResolvedValue(mockPerson);
 
-      const result = await service.findOne(1);
+      const result = await service.findOne('550e8400-e29b-41d4-a716-446655440000');
 
-      expect(repository.findOneBy).toHaveBeenCalledWith({ id: 1 });
+      expect(repository.findOneBy).toHaveBeenCalledWith({ id: '550e8400-e29b-41d4-a716-446655440000' });
       expect(result).toEqual(mockPerson);
     });
 
     it('should throw NotFoundException when person not found', async () => {
       mockRepository.findOneBy.mockResolvedValue(null);
 
-      await expect(service.findOne(999)).rejects.toThrow(NotFoundException);
-      expect(repository.findOneBy).toHaveBeenCalledWith({ id: 999 });
+      await expect(service.findOne('999')).rejects.toThrow(NotFoundException);
+      expect(repository.findOneBy).toHaveBeenCalledWith({ id: '999' });
     });
   });
 
@@ -147,42 +153,42 @@ describe('PersonService', () => {
       mockRepository.findOneBy.mockResolvedValue(mockPerson);
       mockRepository.save.mockResolvedValue(updatedPerson);
 
-      const result = await service.update(1, updatePersonDto);
+      const result = await service.update('550e8400-e29b-41d4-a716-446655440000', updatePersonDto);
 
-      expect(repository.findOneBy).toHaveBeenCalledWith({ id: 1 });
+      expect(repository.findOneBy).toHaveBeenCalledWith({ id: '550e8400-e29b-41d4-a716-446655440000' });
       expect(repository.save).toHaveBeenCalledWith(updatedPerson);
-      expect(result).toEqual(updatedPerson);
+      expect(result.cpf).toBe('***.456.789-**');
     });
 
     it('should throw NotFoundException when person not found', async () => {
       const updatePersonDto: UpdatePersonDto = { name: 'Novo Nome' };
       mockRepository.findOneBy.mockResolvedValue(null);
 
-      await expect(service.update(999, updatePersonDto)).rejects.toThrow(
+      await expect(service.update('999', updatePersonDto)).rejects.toThrow(
         NotFoundException,
       );
     });
 
     it('should throw ConflictException when CPF already exists', async () => {
       const updatePersonDto: UpdatePersonDto = { cpf: '999.999.999-99' };
-      const existingPerson = { ...mockPerson, id: 2 };
+      const existingPerson = { ...mockPerson, id: '660e8400-e29b-41d4-a716-446655440000' };
       
       mockRepository.findOneBy
-        .mockResolvedValueOnce(mockPerson) 
-        .mockResolvedValueOnce(existingPerson); 
+        .mockResolvedValueOnce(mockPerson) // findOne call
+        .mockResolvedValueOnce(existingPerson); // CPF check
 
-      await expect(service.update(1, updatePersonDto)).rejects.toThrow(ConflictException);
+      await expect(service.update('550e8400-e29b-41d4-a716-446655440000', updatePersonDto)).rejects.toThrow(ConflictException);
     });
 
     it('should throw ConflictException when email already exists', async () => {
       const updatePersonDto: UpdatePersonDto = { email: 'existente@email.com' };
-      const existingPerson = { ...mockPerson, id: 2 };
+      const existingPerson = { ...mockPerson, id: '660e8400-e29b-41d4-a716-446655440000' };
       
       mockRepository.findOneBy
         .mockResolvedValueOnce(mockPerson) // findOne call
         .mockResolvedValueOnce(existingPerson); // email check
 
-      await expect(service.update(1, updatePersonDto)).rejects.toThrow(ConflictException);
+      await expect(service.update('550e8400-e29b-41d4-a716-446655440000', updatePersonDto)).rejects.toThrow(ConflictException);
     });
 
     it('should not check for conflicts when updating with same email', async () => {
@@ -192,9 +198,9 @@ describe('PersonService', () => {
       mockRepository.findOneBy.mockResolvedValue(mockPerson);
       mockRepository.save.mockResolvedValue(updatedPerson);
 
-      await service.update(1, updatePersonDto);
+      await service.update('550e8400-e29b-41d4-a716-446655440000', updatePersonDto);
 
-      expect(repository.findOneBy).toHaveBeenCalledTimes(1); // Only findOne call
+      expect(repository.findOneBy).toHaveBeenCalledTimes(2); // findOne call + direct findOneBy call
       expect(repository.save).toHaveBeenCalledWith(updatedPerson);
     });
 
@@ -205,9 +211,9 @@ describe('PersonService', () => {
       mockRepository.findOneBy.mockResolvedValue(mockPerson);
       mockRepository.save.mockResolvedValue(updatedPerson);
 
-      await service.update(1, updatePersonDto);
+      await service.update('550e8400-e29b-41d4-a716-446655440000', updatePersonDto);
 
-      expect(repository.findOneBy).toHaveBeenCalledTimes(1); // Only findOne call
+      expect(repository.findOneBy).toHaveBeenCalledTimes(2); // findOne call + direct findOneBy call
       expect(repository.save).toHaveBeenCalledWith(updatedPerson);
     });
 
@@ -218,11 +224,11 @@ describe('PersonService', () => {
       mockRepository.findOneBy.mockResolvedValue(mockPerson);
       mockRepository.save.mockResolvedValue(updatedPerson);
 
-      const result = await service.update(1, updateDto);
+      const result = await service.update('550e8400-e29b-41d4-a716-446655440000', updateDto);
 
-      expect(repository.findOneBy).toHaveBeenCalledWith({ id: 1 });
+      expect(repository.findOneBy).toHaveBeenCalledWith({ id: '550e8400-e29b-41d4-a716-446655440000' });
       expect(repository.save).toHaveBeenCalledWith(updatedPerson);
-      expect(result).toEqual(updatedPerson);
+      expect(result.cpf).toBe('***.456.789-**');
     });
 
     it('should handle update with new email that does not exist', async () => {
@@ -237,11 +243,11 @@ describe('PersonService', () => {
         .mockResolvedValueOnce(null); 
       mockRepository.save.mockResolvedValue(updatedPerson);
 
-      const result = await service.update(1, updatePersonDto);
+      const result = await service.update('550e8400-e29b-41d4-a716-446655440000', updatePersonDto);
 
-      expect(repository.findOneBy).toHaveBeenCalledWith({ id: 1 });
+      expect(repository.findOneBy).toHaveBeenCalledWith({ id: '550e8400-e29b-41d4-a716-446655440000' });
       expect(repository.save).toHaveBeenCalledWith(updatedPerson);
-      expect(result).toEqual(updatedPerson);
+      expect(result.cpf).toBe('***.456.789-**');
     });
   });
 
@@ -250,16 +256,17 @@ describe('PersonService', () => {
       mockRepository.findOneBy.mockResolvedValue(mockPerson);
       mockRepository.remove.mockResolvedValue(mockPerson);
 
-      await service.remove(1);
+      const result = await service.remove('550e8400-e29b-41d4-a716-446655440000');
 
-      expect(repository.findOneBy).toHaveBeenCalledWith({ id: 1 });
+      expect(repository.findOneBy).toHaveBeenCalledWith({ id: '550e8400-e29b-41d4-a716-446655440000' });
       expect(repository.remove).toHaveBeenCalledWith(mockPerson);
+      expect(result).toEqual({ message: 'Pessoa removida com sucesso' });
     });
 
     it('should throw NotFoundException when person not found', async () => {
       mockRepository.findOneBy.mockResolvedValue(null);
 
-      await expect(service.remove(999)).rejects.toThrow(NotFoundException);
+      await expect(service.remove('999')).rejects.toThrow(NotFoundException);
     });
   });
 }); 

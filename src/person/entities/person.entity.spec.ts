@@ -39,7 +39,7 @@ describe('Person Entity', () => {
   describe('entity instantiation', () => {
     it('should create person with all properties', () => {
       const personData = {
-        id: 1,
+        id: '550e8400-e29b-41d4-a716-446655440000',
         name: 'João Silva',
         email: 'joao@email.com',
         birthDate: new Date('1990-01-01'),
@@ -111,13 +111,13 @@ describe('Person Entity', () => {
       expect(person.updatedAt).toBeInstanceOf(Date);
     });
 
-    it('should handle number properties correctly', () => {
+    it('should handle string id correctly', () => {
       const person = new Person();
-      const testId = 1;
+      const testId = '550e8400-e29b-41d4-a716-446655440000';
 
       person.id = testId;
 
-      expect(typeof person.id).toBe('number');
+      expect(typeof person.id).toBe('string');
       expect(person.id).toBe(testId);
     });
   });
@@ -150,17 +150,17 @@ describe('Person Entity', () => {
   describe('entity comparison', () => {
     it('should compare entities correctly', () => {
       const person1 = new Person();
-      person1.id = 1;
+      person1.id = '550e8400-e29b-41d4-a716-446655440000';
       person1.name = 'João Silva';
       person1.cpf = '123.456.789-00';
 
       const person2 = new Person();
-      person2.id = 1;
+      person2.id = '550e8400-e29b-41d4-a716-446655440000';
       person2.name = 'João Silva';
       person2.cpf = '123.456.789-00';
 
       const person3 = new Person();
-      person3.id = 2;
+      person3.id = '660e8400-e29b-41d4-a716-446655440000';
       person3.name = 'Maria Silva';
       person3.cpf = '987.654.321-00';
 
@@ -174,7 +174,7 @@ describe('Person Entity', () => {
   describe('entity cloning', () => {
     it('should allow creating a copy of the entity', () => {
       const originalPerson = new Person();
-      originalPerson.id = 1;
+      originalPerson.id = '550e8400-e29b-41d4-a716-446655440000';
       originalPerson.name = 'João Silva';
       originalPerson.email = 'joao@email.com';
       originalPerson.birthDate = new Date('1990-01-01');
