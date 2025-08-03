@@ -5,7 +5,6 @@ import { Person } from './entities/person.entity';
 import { CreatePersonDto } from './dto/create-person.dto';
 import { UpdatePersonDto } from './dto/update-person.dto';
 import { ERROR_CODES } from '../common/constants/error-codes';
-import { EncryptionService } from '../common/services/encryption.service';
 import { PaginationQueryDto } from './dto/pagination-query.dto';
 import { PaginatedResponseDto } from './dto/paginated-response.dto';
 
@@ -14,28 +13,7 @@ export class PersonService {
   constructor(
     @InjectRepository(Person)
     private personRepo: Repository<Person>,
-    private encryptionService: EncryptionService,
   ) {}
-
-  private isEncrypted(data: string): boolean {
-    if (!data) return false;
-    return data.startsWith('U2FsdGVkX1');
-  }
-
-  private safeDecrypt(data: string): string {
-    if (!data) return data;
-    
-    if (!this.isEncrypted(data)) {
-      return data;
-    }
-    
-    try {
-      const decrypted = this.encryptionService.decrypt(data);
-      return decrypted;
-    } catch (error) {
-      return data;
-    }
-  }
 
   async create(dto: CreatePersonDto): Promise<Person> {
     const existingCpf = await this.personRepo.findOneBy({ cpf: dto.cpf });
@@ -62,18 +40,10 @@ export class PersonService {
       }
     }
 
-    const encryptedCPF = this.encryptionService.encrypt(dto.cpf);
-
-    const person = this.personRepo.create({
-      ...dto,
-      cpf: encryptedCPF,
-    });
+    const person = this.personRepo.create(dto);
     const savedPerson = await this.personRepo.save(person);
 
-    return {
-      ...savedPerson,
-      cpf: this.safeDecrypt(savedPerson.cpf),
-    };
+    return savedPerson;
   }
 
   async findAll(searchTerm?: string, pagination?: PaginationQueryDto): Promise<PaginatedResponseDto<Person>> {
@@ -88,21 +58,14 @@ export class PersonService {
         order: { name: 'ASC' }
       });
       
-      const decryptedPersons = persons.map(person => ({
-        ...person,
-        cpf: this.safeDecrypt(person.cpf),
-      }));
-
-      const totalPages = Math.ceil(total / limit);
-      
       return {
-        data: decryptedPersons,
+        data: persons,
         page,
         limit,
         total,
-        totalPages,
+        totalPages: Math.ceil(total / limit),
         hasPrevious: page > 1,
-        hasNext: page < totalPages,
+        hasNext: page < Math.ceil(total / limit),
       };
     }
 
@@ -122,15 +85,10 @@ export class PersonService {
       .take(limit)
       .getManyAndCount();
 
-    const decryptedPersons = persons.map(person => ({
-      ...person,
-      cpf: this.safeDecrypt(person.cpf),
-    }));
-
     const totalPages = Math.ceil(total / limit);
     
     return {
-      data: decryptedPersons,
+      data: persons,
       page,
       limit,
       total,
@@ -152,10 +110,7 @@ export class PersonService {
           path: `/v1/people/${id}`,
         });
       }
-      return {
-        ...person,
-        cpf: this.safeDecrypt(person.cpf),
-      };
+      return person;
     } catch (error) {
       if (error.code === '22P02' || error.message?.includes('invalid input syntax')) {
         throw new NotFoundException({
@@ -217,7 +172,7 @@ export class PersonService {
         });
       }
 
-      if (dto.cpf) originalPerson.cpf = this.encryptionService.encrypt(dto.cpf);
+      if (dto.cpf) originalPerson.cpf = dto.cpf;
       if (dto.email) originalPerson.email = dto.email;
       if (dto.address) originalPerson.address = dto.address;
       if (dto.name) originalPerson.name = dto.name;
@@ -227,10 +182,7 @@ export class PersonService {
       if (dto.nationality) originalPerson.nationality = dto.nationality;
 
       const updatedPerson = await this.personRepo.save(originalPerson);
-      return {
-        ...updatedPerson,
-        cpf: this.safeDecrypt(updatedPerson.cpf),
-      };
+      return updatedPerson;
     } catch (error) {
       if (error.code === '22P02' || error.message?.includes('invalid input syntax')) {
         throw new NotFoundException({
