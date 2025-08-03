@@ -15,6 +15,16 @@ export class PersonService {
     private personRepo: Repository<Person>,
   ) {}
 
+  private maskCpf(cpf: string): string {
+    if (!cpf) return cpf;
+    
+    const cleanCpf = cpf.replace(/[^\d]/g, '');
+    
+    if (cleanCpf.length !== 11) return cpf;
+    
+    return `***.${cleanCpf.slice(3, 6)}.${cleanCpf.slice(6, 9)}-**`;
+  }
+
   async create(dto: CreatePersonDto): Promise<Person> {
     const existingCpf = await this.personRepo.findOneBy({ cpf: dto.cpf });
     if (existingCpf) {
@@ -43,7 +53,10 @@ export class PersonService {
     const person = this.personRepo.create(dto);
     const savedPerson = await this.personRepo.save(person);
 
-    return savedPerson;
+    return {
+      ...savedPerson,
+      cpf: this.maskCpf(savedPerson.cpf),
+    };
   }
 
   async findAll(searchTerm?: string, pagination?: PaginationQueryDto): Promise<PaginatedResponseDto<Person>> {
@@ -58,8 +71,13 @@ export class PersonService {
         order: { name: 'ASC' }
       });
       
+      const maskedPersons = persons.map(person => ({
+        ...person,
+        cpf: this.maskCpf(person.cpf),
+      }));
+
       return {
-        data: persons,
+        data: maskedPersons,
         page,
         limit,
         total,
@@ -85,10 +103,15 @@ export class PersonService {
       .take(limit)
       .getManyAndCount();
 
+    const maskedPersons = persons.map(person => ({
+      ...person,
+      cpf: this.maskCpf(person.cpf),
+    }));
+
     const totalPages = Math.ceil(total / limit);
     
     return {
-      data: persons,
+      data: maskedPersons,
       page,
       limit,
       total,
@@ -182,7 +205,10 @@ export class PersonService {
       if (dto.nationality) originalPerson.nationality = dto.nationality;
 
       const updatedPerson = await this.personRepo.save(originalPerson);
-      return updatedPerson;
+      return {
+        ...updatedPerson,
+        cpf: this.maskCpf(updatedPerson.cpf),
+      };
     } catch (error) {
       if (error.code === '22P02' || error.message?.includes('invalid input syntax')) {
         throw new NotFoundException({
