@@ -40,7 +40,7 @@ export class PersonController {
   })
   @ApiResponse({ 
     status: 409, 
-    description: 'CPF ou email já cadastrado',
+    description: 'CPF já cadastrado ou Email já cadastrado',
     type: PersonConflictErrorResponseDto
   })
   create(@Body() dto: CreatePersonDto) {
@@ -65,7 +65,7 @@ export class PersonController {
   })
   @ApiResponse({ 
     status: 409, 
-    description: 'CPF ou email já cadastrado',
+    description: 'CPF já cadastrado ou Email já cadastrado',
     type: PersonConflictErrorResponseDto
   })
   createV2(@Body() dto: CreatePersonV2Dto) {
@@ -165,12 +165,7 @@ export class PersonController {
   @ApiResponse({ 
     status: 409, 
     description: 'CPF já cadastrado ou Email já cadastrado',
-    schema: {
-      oneOf: [
-        { $ref: '#/components/schemas/PersonConflictCPFErrorResponseDto' },
-        { $ref: '#/components/schemas/PersonConflictEmailErrorResponseDto' }
-      ]
-    }
+    type: PersonConflictErrorResponseDto
   })
   update(@Param('id') id: string, @Body() dto: UpdatePersonDto) {
     return this.service.update(id, dto);
@@ -206,12 +201,7 @@ export class PersonController {
   @ApiResponse({ 
     status: 409, 
     description: 'CPF já cadastrado ou Email já cadastrado',
-    schema: {
-      oneOf: [
-        { $ref: '#/components/schemas/PersonConflictCPFErrorResponseDto' },
-        { $ref: '#/components/schemas/PersonConflictEmailErrorResponseDto' }
-      ]
-    }
+    type: PersonConflictErrorResponseDto
   })
   updateV2(@Param('id') id: string, @Body() dto: UpdatePersonV2Dto) {
     return this.service.update(id, dto);

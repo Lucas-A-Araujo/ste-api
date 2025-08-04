@@ -9,6 +9,7 @@ import { AuthModule } from './auth/auth.module';
   imports: [
     TypeOrmModule.forRoot({
       type: 'postgres',
+      url: process.env.DATABASE_URL, 
       host: process.env.DATABASE_HOST || 'localhost',
       port: process.env.DATABASE_PORT ? parseInt(process.env.DATABASE_PORT) : 5432,
       username: process.env.DATABASE_USER || 'docker',
